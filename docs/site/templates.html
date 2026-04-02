@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Template generator — nf-bioimage-spec</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; }
+  .topbar { background: #fff; border-bottom: 1.5px solid #e2e8f0; padding: 10px 20px; font-size: 13px; color: #64748b; }
+  .topbar a { color: #334155; text-decoration: none; font-weight: 600; }
+  #root { max-width: 960px; margin: 0 auto; padding: 16px; }
+  pre { background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 0 0 8px 8px; font-size: 11px; line-height: 1.6; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
+  .tab-bar button { padding: 6px 14px; font-size: 11px; cursor: pointer; font-family: monospace; border: 1.5px solid #334155; border-radius: 6px 6px 0 0; }
+  .tab-bar button.active { background: #0f172a; color: #e2e8f0; border-bottom: none; font-weight: 700; }
+  .tab-bar button:not(.active) { background: #e2e8f0; color: #334155; }
+  .code-header { display: flex; justify-content: space-between; align-items: center; background: #1e293b; color: #94a3b8; padding: 6px 12px; border-radius: 8px 8px 0 0; font-size: 11px; }
+  .copy-btn { background: none; border: 1px solid #475569; border-radius: 4px; color: #94a3b8; font-size: 10px; padding: 2px 8px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="topbar"><a href="index.html">← nf-bioimage-spec</a> / Template generator</div>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+const e = React.createElement;
+
+/* Load schemas at build time — for GH Pages we inline the fetch from relative paths */
+const STORAGE_ABBR={"monolithic":"Mono","chunked":"Chnk"};
+const OUTPUT_ABBR={"image":"Img","mask":"Msk","vector":"Vec","tabular":"Tab","scalar":"Scl","skeleton":"Skl","swc":"SWC","track":"Trk","track+div":"TrkDiv","points":"Pts","classmask":"ClsMsk"};
+const PARALLEL_ABBR={"external":"Ext","internal":"Int"};
+const PROFILE_ABBR={"enduser":"EU","developer":"Dev"};
+const CAT_NAMES={"ImgProc":"ImageProcessing","Stitch":"StitchingRegistration","ObjSeg":"ObjectSegmentation","PixCla":"PixelVoxelClassification","ObjDet":"SpotObjectDetection","SptCnt":"SpotObjectCounting","LndDet":"LandmarkDetection","TreTrc":"FilamentTreeTracing","LooTrc":"FilamentNetworkTracing","PrtTrk":"ParticleTracking","ObjTrk":"ObjectTracking","FeatExt":"FeatureExtraction","Raster":"Rasterisation","Seg2Vec":"SegmentationToVector"};
+const OUTPUT_SUFFIX={"image":"_processed.tif","mask":"_labels.tif","vector":"_labels.geojson","tabular":"_features.csv","scalar":"_counts.csv","skeleton":"_skeleton.tif","swc":"_trace.swc","track":"_tracks.csv","track+div":"_tracks/","points":"_detections.csv","classmask":"_landmarks.csv"};
+
+function getNames(catId,v){
+  const full=`${CAT_NAMES[catId]}_${{"monolithic":"Monolithic","chunked":"Chunked"}[v.storage]}_${OUTPUT_ABBR[v.output]==="Img"?"Image":OUTPUT_ABBR[v.output]}_${{"external":"External","internal":"Internal"}[v.parallelism]}_${{"enduser":"EndUser","developer":"Developer"}[v.user_profile]}`;
+  const abbr=`${catId}_${STORAGE_ABBR[v.storage]}_${OUTPUT_ABBR[v.output]}_${PARALLEL_ABBR[v.parallelism]}_${PROFILE_ABBR[v.user_profile]}`;
+  return{full,abbr,path:`templates/${v.storage}/${v.user_profile}/${catId.toLowerCase()}/`,process:abbr.toUpperCase()};
+}
+
+function genMainNf(cat,v,names){
+  const tool=cat.id.toLowerCase();
+  const label=v.gpu==="optional"?"process_medium":v.gpu==="required"?"process_gpu":v.parallelism==="internal"?"process_high":"process_medium";
+  const vcmd=v.ecosystem==="python"?`python -m ${tool} --version 2>&1 | sed 's/.*//g'`:`fiji --headless --eval 'println(System.getProperty("fiji.version"))'`;
+  const pkg=v.ecosystem==="python"?tool:`fiji-${tool}`;
+  return `// Full name:    ${names.full}
+// Abbreviation: ${names.abbr}
+
+process ${names.process} {
+    tag "$meta.id"
+    label '${label}'
+
+    conda "bioconda::${pkg}=1.0.0"
+    container "${ 'workflow.containerEngine' }..."
+
+    input:
+    ${v.nf_input}
+
+    output:
+    ${v.nf_output}
+    tuple val("\${task.process}"), val('${tool}'), eval('${vcmd}'), emit: versions_${tool}, topic: versions
+
+    when:
+    task.ext.when == null || task.ext.when
+
+    script:
+    def args = task.ext.args ?: ''
+    def prefix = task.ext.prefix ?: "\${meta.id}"
+    """
+    python -m ${tool} \\\\
+        --input ${v.storage==="chunked"?"\\${zarr_dir}":"\\${image}"} \\\\${v.model==="model_input"?"\n        --model \\${model_weights} \\\\":""}
+        --output \\${prefix}${OUTPUT_SUFFIX[v.output]||"_output.txt"} \\\\
+        \\$args
+    """
+
+    stub:
+    def prefix = task.ext.prefix ?: "\${meta.id}"
+    """
+    touch \\${prefix}${OUTPUT_SUFFIX[v.output]||"_output.txt"}
+    """
+}`;
+}
+
+function genMetaYml(cat,v,names){
+  const tool=cat.id.toLowerCase();
+  return `# Full name:    ${names.full}
+# Abbreviation: ${names.abbr}
+
+name: "${names.abbr.toLowerCase()}"
+description: |
+  ${cat.task}
+  Storage: ${v.storage} | Profile: ${v.user_profile}
+keywords: [bioimage, ${tool}, ${v.storage}, ${v.output}]
+tools:
+  - "${tool}":
+      description: "${cat.task}"
+      licence: ["MIT"]
+input:
+  - meta:
+      type: map
+      description: Sample metadata map
+${v.storage==="chunked"?`  - zarr_dir:
+      type: directory
+      pattern: "*.zarr"`:`  - image:
+      type: file
+      pattern: "*.{tif,tiff,png}"`}${v.model==="model_input"?`
+  - model_weights:
+      type: file
+      pattern: "*.{pth,h5,onnx,pt}"`:""}
+topics:
+  versions:
+    - - "\${task.process}": {type: string}
+      - "${tool}": {type: string}
+      - eval: {type: eval}`;
+}
+
+function genTest(cat,v,names){
+  return `// ${names.abbr}
+nextflow_process {
+    name "Test ${names.process}"
+    script "../main.nf"
+    process "${names.process}"
+
+    test("Should run ${cat.id} ${v.storage} ${v.user_profile}") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [id: 'test', pixel_size_xy: 0.65],
+                    file(params.test_data['${v.storage==="chunked"?"zarr":"image"}'], checkIfExists: true)${v.model==="model_input"?`,
+                    file(params.test_data['model'], checkIfExists: true)`:""}
+                ]
+                """
+            }
+        }
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() },
+                { assert process.out.findAll { key, val -> key.startsWith('versions') } }
+            )
+        }
+    }
+}`;
+}
+
+function genModulesConfig(cat,v,names){
+  const paramLines=(v.params||"").split(",").map(p=>`            // ${p.trim()}`).join("\n");
+  return `// ${names.abbr}
+process {
+    withName: '${names.process}' {
+        ext.args = [
+${paramLines}
+        ].join(' ')
+        publishDir = [
+            path: { "\${params.outdir}/${cat.id.toLowerCase()}" },
+            mode: params.publish_dir_mode,
+            saveAs: { fn -> fn == 'versions.yml' ? null : fn }
+        ]
+    }
+}`;
+}
+
+function App(){
+  const[cats,setCats]=useState(null);
+  const[variants,setVariants]=useState(null);
+  const[selCat,setSelCat]=useState(null);
+  const[selVar,setSelVar]=useState(null);
+  const[tab,setTab]=useState("main.nf");
+  const[copied,setCopied]=useState(false);
+
+  React.useEffect(()=>{
+    fetch("../schemas/categories.json").then(r=>r.json()).then(setCats).catch(()=>{});
+    fetch("../schemas/variants.json").then(r=>r.json()).then(setVariants).catch(()=>{});
+  },[]);
+
+  if(!cats||!variants) return e("div",{style:{padding:40,textAlign:"center",color:"#64748b"}},"Loading schemas...");
+
+  const catMap=Object.fromEntries(cats.map(c=>[c.id,c]));
+  const catIds=[...new Set(variants.map(v=>v.category_id))];
+  const cat=catMap[selCat];
+  const catVariants=variants.filter(v=>v.category_id===selCat);
+  const variant=catVariants[selVar];
+  const names=cat&&variant?getNames(cat.id,variant):null;
+
+  const tabs=["main.nf","meta.yml","test/main.nf.test","modules.config"];
+  let code="";
+  if(cat&&variant&&names){
+    if(tab==="main.nf") code=genMainNf(cat,variant,names);
+    else if(tab==="meta.yml") code=genMetaYml(cat,variant,names);
+    else if(tab==="test/main.nf.test") code=genTest(cat,variant,names);
+    else code=genModulesConfig(cat,variant,names);
+  }
+
+  return e("div",{style:{fontFamily:"system-ui",color:"#1e293b",padding:16,lineHeight:1.5}},
+    e("h2",{style:{fontSize:20,fontWeight:700,margin:"0 0 4px"}},"nf-core Module Templates"),
+    e("p",{style:{fontSize:13,color:"#475569",margin:"0 0 14px"}},"Select category → variant → browse generated files"),
+
+    e("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}},
+      catIds.map(id=>e("button",{key:id,onClick:()=>{setSelCat(id);setSelVar(null)},style:{padding:"5px 12px",borderRadius:8,fontSize:12,cursor:"pointer",border:selCat===id?"2px solid #1e293b":"1.5px solid #cbd5e1",background:selCat===id?"#1e293b":"#fff",color:selCat===id?"#fff":"#334155",fontWeight:selCat===id?700:500}},id))),
+
+    cat&&e("div",{style:{marginBottom:14}},
+      e("div",{style:{fontSize:12,fontWeight:600,color:"#64748b",marginBottom:6}},cat.category," — ",catVariants.length," variants:"),
+      e("div",{style:{display:"flex",gap:6,flexWrap:"wrap"}},
+        catVariants.map((v,vi)=>e("button",{key:vi,onClick:()=>{setSelVar(vi);setTab("main.nf")},style:{padding:"5px 12px",borderRadius:8,fontSize:11,cursor:"pointer",textAlign:"left",border:selVar===vi?"2px solid #334155":"1.5px solid #cbd5e1",background:selVar===vi?"#f0fdf4":"#fff",color:"#334155",fontWeight:selVar===vi?700:500}},
+          e("div",null,v.user_profile==="enduser"?"👤":"🛠"," ",v.storage," → ",v.output),
+          names&&selVar===vi&&e("div",{style:{fontSize:9,fontFamily:"monospace",color:"#64748b",marginTop:2}},getNames(cat.id,v).abbr))))),
+
+    names&&e("div",null,
+      e("div",{style:{background:"#f8fafc",border:"1.5px solid #e2e8f0",borderRadius:10,padding:"12px 14px",marginBottom:12}},
+        e("div",{style:{display:"grid",gridTemplateColumns:"auto 1fr",gap:"4px 12px",fontSize:12}},
+          e("span",{style:{fontWeight:700,color:"#64748b"}},"Full:"),e("code",{style:{fontFamily:"monospace",color:"#0f172a"}},names.full),
+          e("span",{style:{fontWeight:700,color:"#64748b"}},"Abbr:"),e("code",{style:{fontFamily:"monospace",color:"#0f172a",fontWeight:700}},names.abbr),
+          e("span",{style:{fontWeight:700,color:"#64748b"}},"Path:"),e("code",{style:{fontFamily:"monospace",color:"#475569",fontSize:11}},names.path),
+          e("span",{style:{fontWeight:700,color:"#64748b"}},"Process:"),e("code",{style:{fontFamily:"monospace",color:"#475569",fontSize:11}},names.process))),
+
+      e("div",{className:"tab-bar",style:{display:"flex",gap:2}},
+        tabs.map(t=>e("button",{key:t,className:tab===t?"active":"",onClick:()=>setTab(t)},t))),
+
+      e("div",null,
+        e("div",{className:"code-header"},
+          e("span",null,tab),
+          e("button",{className:"copy-btn",onClick:()=>{navigator.clipboard.writeText(code);setCopied(true);setTimeout(()=>setCopied(false),2000)}},copied?"✓ Copied":"Copy")),
+        e("pre",null,code))),
+
+    !selCat&&e("div",{style:{padding:40,textAlign:"center",color:"#94a3b8"}},"↑ Select a category"),
+    selCat&&selVar===null&&e("div",{style:{padding:20,textAlign:"center",color:"#94a3b8"}},"↑ Select a variant"));
+}
+
+ReactDOM.render(React.createElement(App), document.getElementById('root'));
+</script>
+</body>
+</html>

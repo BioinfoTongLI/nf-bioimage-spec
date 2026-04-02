@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nf-bioimage-spec</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; color: #1e293b; padding: 40px 20px; }
+  .container { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  .subtitle { font-size: 15px; color: #64748b; margin-bottom: 32px; }
+  .card { background: #fff; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 16px; text-decoration: none; color: inherit; display: block; transition: border-color 0.15s, box-shadow 0.15s; }
+  .card:hover { border-color: #94a3b8; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+  .card h2 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .card p { font-size: 14px; color: #475569; line-height: 1.5; }
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 6px; margin-right: 6px; }
+  .badge-purple { background: #eef2ff; color: #4f46e5; border: 1px solid #a5b4fc; }
+  .badge-green { background: #ecfdf5; color: #059669; border: 1px solid #6ee7b7; }
+  .footer { margin-top: 32px; font-size: 12px; color: #94a3b8; }
+  .footer a { color: #64748b; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>nf-bioimage-spec</h1>
+  <p class="subtitle">Specification and templates for nf-core bioimage analysis modules</p>
+
+  <a class="card" href="categories.html">
+    <div>
+      <span class="badge badge-green">Interactive</span>
+      <span class="badge badge-purple">14 categories</span>
+    </div>
+    <h2>Module category reference</h2>
+    <p>Browse all analysis categories with branching axes: storage format, output type, parallelism strategy, user profile. Each variant shows Nextflow I/O contracts, GPU requirements, model management, QC outputs, and meta fields.</p>
+  </a>
+
+  <a class="card" href="templates.html">
+    <div>
+      <span class="badge badge-green">Interactive</span>
+      <span class="badge badge-purple">~50 variants</span>
+    </div>
+    <h2>Template generator</h2>
+    <p>Select a category and variant to generate complete nf-core module files: main.nf, meta.yml, test/main.nf.test, and modules.config. Uses eval() topic channels (nf-core tools ≥ 3.5).</p>
+  </a>
+
+  <a class="card" href="https://github.com/BioinfoTongLI/nf-bioimage-spec">
+    <h2>GitHub repository</h2>
+    <p>Source code, JSON schemas, generation scripts, and documentation.</p>
+  </a>
+
+  <div class="footer">
+    Sources: <a href="https://neubias-wg5.github.io/problem_class_ground_truth.html">BIAFLOWS/NEUBIAS</a> · <a href="https://ngff.openmicroscopy.org/latest/">OME-NGFF</a> · <a href="https://nf-co.re/docs/guidelines/components/modules">nf-core</a>
+  </div>
+</div>
+</body>
+</html>
