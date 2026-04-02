@@ -1,0 +1,34 @@
+name: Validate templates
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Generate templates
+        run: python scripts/generate_templates.py
+
+      - name: Validate all generated modules
+        run: |
+          FAILED=0
+          for dir in templates/*/*/*/; do
+            if [ -f "$dir/main.nf" ]; then
+              python scripts/validate_module.py "$dir" || FAILED=1
+            fi
+          done
+          exit $FAILED
+
+      - name: Check for uncommitted changes
+        run: |
+          git diff --exit-code templates/ || (echo "Templates out of sync with schemas. Run generate_templates.py and commit." && exit 1)
