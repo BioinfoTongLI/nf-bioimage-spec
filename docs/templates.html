@@ -174,8 +174,8 @@ function App(){
   const[copied,setCopied]=useState(false);
 
   React.useEffect(()=>{
-    fetch("../schemas/categories.json").then(r=>r.json()).then(setCats).catch(()=>{});
-    fetch("../schemas/variants.json").then(r=>r.json()).then(setVariants).catch(()=>{});
+    fetch("categories.json").then(r=>r.json()).then(setCats).catch(()=>{});
+    fetch("variants.json").then(r=>r.json()).then(setVariants).catch(()=>{});
   },[]);
 
   if(!cats||!variants) return e("div",{style:{padding:40,textAlign:"center",color:"#64748b"}},"Loading schemas...");
