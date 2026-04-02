@@ -136,7 +136,10 @@ function render() {
     cvars.forEach(function(cv,i) {
       var b = document.createElement("button");
       b.className = "vbtn" + (selVar===i?" on":"");
-      b.textContent = (cv.user_profile==="enduser"?"\uD83D\uDC64":"\uD83D\uDEE0") + " " + cv.storage + " \u2192 " + cv.output;
+      var oIcon = {image:"🖼",mask:"🏷",vector:"📐",tabular:"📊",scalar:"#️⃣",skeleton:"🦴",swc:"🌳",track:"〰",points:"·",classmask:"◎","track+div":"〰÷"}[cv.output]||"";
+      var gpuIcon = cv.gpu==="optional"?" ⚡":"";
+      var ioIcon = {new_file:"📄",read_only_new_file:"📄",new_group_same_zarr:"📁+",new_zarr_symlink_labels:"🔗🏷",new_zarr_symlink_meta:"🔗📋"}[cv.io_strategy]||"";
+      b.textContent = (cv.user_profile==="enduser"?"👤":"🛠") + " " + cv.storage + " → " + oIcon + " " + cv.output + gpuIcon + " " + ioIcon;
       b.onclick = function() { selVar=i; activeTab="main.nf"; render(); };
       vd.appendChild(b);
     });
@@ -150,10 +153,26 @@ function render() {
       // Name box
       var nb = document.createElement("div");
       nb.className = "name-box";
+      var storIcon = v.storage==="monolithic"?"💾":"🧊";
+      var outIcon = {image:"🖼",mask:"🏷",vector:"📐",tabular:"📊",scalar:"#️⃣",skeleton:"🦴",swc:"🌳",track:"〰",points:"·",classmask:"◎","track+div":"〰÷"}[v.output]||"";
+      var profIcon = v.user_profile==="enduser"?"👤":"🛠";
+      var gpIcon = {none:"",optional:"⚡ GPU optional",required:"⚡ GPU required"}[v.gpu]||"";
+      var mdlIcon = {none:"",model_bundled:"📦 Bundled",model_input:"📂 Input path"}[v.model]||"";
+      var ecoIcon = v.ecosystem==="python"?"🐍 Python":"☕ Java/Fiji";
+      var ioI = {new_file:"📄 New file",read_only_new_file:"📄 Read-only → new file",new_group_same_zarr:"📁+ New group in zarr",new_zarr_symlink_labels:"🔗🏷 Symlinks + labels/",new_zarr_symlink_meta:"🔗📋 Symlinks + metadata"}[v.io_strategy]||"";
       nb.innerHTML = '<div class="row"><span class="lbl">Full:</span><code>'+esc(n.full)+'</code></div>'
         + '<div class="row"><span class="lbl">Abbr:</span><code style="font-weight:700">'+esc(n.abbr)+'</code></div>'
         + '<div class="row"><span class="lbl">Path:</span><code style="color:#475569">'+esc(n.path)+'</code></div>'
-        + '<div class="row"><span class="lbl">Process:</span><code style="color:#475569">'+esc(n.proc)+'</code></div>';
+        + '<div class="row"><span class="lbl">Process:</span><code style="color:#475569">'+esc(n.proc)+'</code></div>'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'
+        + '<span style="font-size:11px;padding:2px 8px;border-radius:6px;background:#fef2f2;color:#b91c1c;border:1px solid #fca5a5">'+storIcon+' '+v.storage+'</span>'
+        + '<span style="font-size:11px;padding:2px 8px;border-radius:6px;background:#eff6ff;color:#1d4ed8;border:1px solid #93c5fd">'+outIcon+' '+v.output+'</span>'
+        + '<span style="font-size:11px;padding:2px 8px;border-radius:6px;background:#f0fdfa;color:#0d9488;border:1px solid #99f6e4">'+profIcon+' '+v.user_profile+'</span>'
+        + (gpIcon?'<span style="font-size:11px;padding:2px 8px;border-radius:6px;background:#fffbeb;color:#b45309;border:1px solid #fcd34d">'+gpIcon+'</span>':'')
+        + (mdlIcon?'<span style="font-size:11px;padding:2px 8px;border-radius:6px;background:#f5f3ff;color:#7c3aed;border:1px solid #c4b5fd">'+mdlIcon+'</span>':'')
+        + '<span style="font-size:11px;padding:2px 8px;border-radius:6px;background:#f1f5f9;color:#475569;border:1px solid #cbd5e1">'+ecoIcon+'</span>'
+        + '<span style="font-size:11px;padding:2px 8px;border-radius:6px;background:#f0fdf4;color:#166534;border:1px solid #86efac">'+ioI+'</span>'
+        + '</div>';
       app.appendChild(nb);
 
       // Tabs
