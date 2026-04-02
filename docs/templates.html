@@ -4,234 +4,138 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Template generator — nf-bioimage-spec</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; }
-  .topbar { background: #fff; border-bottom: 1.5px solid #e2e8f0; padding: 10px 20px; font-size: 13px; color: #64748b; }
-  .topbar a { color: #334155; text-decoration: none; font-weight: 600; }
-  #root { max-width: 960px; margin: 0 auto; padding: 16px; }
-  pre { background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 0 0 8px 8px; font-size: 11px; line-height: 1.6; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
-  .tab-bar button { padding: 6px 14px; font-size: 11px; cursor: pointer; font-family: monospace; border: 1.5px solid #334155; border-radius: 6px 6px 0 0; }
-  .tab-bar button.active { background: #0f172a; color: #e2e8f0; border-bottom: none; font-weight: 700; }
-  .tab-bar button:not(.active) { background: #e2e8f0; color: #334155; }
-  .code-header { display: flex; justify-content: space-between; align-items: center; background: #1e293b; color: #94a3b8; padding: 6px 12px; border-radius: 8px 8px 0 0; font-size: 11px; }
-  .copy-btn { background: none; border: 1px solid #475569; border-radius: 4px; color: #94a3b8; font-size: 10px; padding: 2px 8px; cursor: pointer; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,-apple-system,sans-serif;background:#f8fafc}
+  .topbar{background:#fff;border-bottom:1.5px solid #e2e8f0;padding:10px 20px;font-size:13px;color:#64748b}
+  .topbar a{color:#334155;text-decoration:none;font-weight:600}
+  #app{max-width:960px;margin:0 auto;padding:16px}
+  .cat-btns,.var-btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .cbtn{padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;border:1.5px solid #cbd5e1;background:#fff;color:#334155;font-weight:500}
+  .cbtn.on{border:2px solid #1e293b;background:#1e293b;color:#fff;font-weight:700}
+  .vbtn{padding:5px 12px;border-radius:8px;font-size:11px;cursor:pointer;border:1.5px solid #cbd5e1;background:#fff;color:#334155;font-weight:500;text-align:left}
+  .vbtn.on{border:2px solid #334155;background:#f0fdf4;font-weight:700}
+  .name-box{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px 14px;margin-bottom:12px}
+  .name-grid{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:12px}
+  .name-grid .lbl{font-weight:700;color:#64748b}
+  .name-grid code{font-family:monospace;color:#0f172a}
+  .tabs{display:flex;gap:2px;margin-bottom:0}
+  .tabs button{padding:6px 14px;font-size:11px;cursor:pointer;font-family:monospace;border:1.5px solid #334155;border-radius:6px 6px 0 0}
+  .tabs button.on{background:#0f172a;color:#e2e8f0;border-bottom:none;font-weight:700}
+  .tabs button:not(.on){background:#e2e8f0;color:#334155}
+  .code-head{display:flex;justify-content:space-between;align-items:center;background:#1e293b;color:#94a3b8;padding:6px 12px;border-radius:8px 8px 0 0;font-size:11px}
+  .copy-btn{background:none;border:1px solid #475569;border-radius:4px;color:#94a3b8;font-size:10px;padding:2px 8px;cursor:pointer}
+  pre{background:#0f172a;color:#e2e8f0;padding:12px;border-radius:0 0 8px 8px;font-size:11px;line-height:1.6;overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+  .hint{padding:20px;text-align:center;color:#94a3b8;font-size:14px}
 </style>
 </head>
 <body>
 <div class="topbar"><a href="index.html">← nf-bioimage-spec</a> / Template generator</div>
-<div id="root"></div>
-<script type="text/babel">
-const { useState } = React;
-const e = React.createElement;
+<div id="app"></div>
+<script>
+const CATS = [{"id":"ImgProc","full_name":"ImageProcessing","category":"Image Processing","task":"Denoising, deconvolution, flat-field correction, filtering","source":"custom"},{"id":"Stitch","full_name":"StitchingRegistration","category":"Stitching / Registration","task":"Align and merge tiles or time-points into a single coordinate space","source":"custom"},{"id":"ObjSeg","full_name":"ObjectSegmentation","category":"Object Segmentation","task":"Delineate individual objects as distinct labelled regions","source":"BIAFLOWS"},{"id":"PixCla","full_name":"PixelVoxelClassification","category":"Pixel / Voxel Classification","task":"Assign each pixel to a semantic class","source":"BIAFLOWS"},{"id":"ObjDet","full_name":"SpotObjectDetection","category":"Spot / Object Detection","task":"Detect and localise objects (e.g. nuclei, spots)","source":"BIAFLOWS"},{"id":"SptCnt","full_name":"SpotObjectCounting","category":"Spot / Object Counting","task":"Estimate the number of objects","source":"BIAFLOWS"},{"id":"LndDet","full_name":"LandmarkDetection","category":"Landmark Detection","task":"Estimate position of specific feature points","source":"BIAFLOWS"},{"id":"TreTrc","full_name":"FilamentTreeTracing","category":"Filament / Tree Tracing","task":"Estimate medial axis of connected filament tree networks","source":"BIAFLOWS"},{"id":"LooTrc","full_name":"FilamentNetworkTracing","category":"Filament Network Tracing","task":"Estimate medial axis of filament networks (with loops)","source":"BIAFLOWS"},{"id":"PrtTrk","full_name":"ParticleTracking","category":"Particle Tracking","task":"Estimate tracks followed by particles (no division)","source":"BIAFLOWS"},{"id":"ObjTrk","full_name":"ObjectTracking","category":"Object Tracking","task":"Estimate tracks + segmentation masks (with divisions)","source":"BIAFLOWS"},{"id":"FeatExt","full_name":"FeatureExtraction","category":"Feature Extraction","task":"Measure morphological, intensity, or texture features","source":"custom"},{"id":"Raster","full_name":"Rasterisation","category":"Rasterisation","task":"Convert vector annotations to raster label masks","source":"custom"},{"id":"Seg2Vec","full_name":"SegmentationToVector","category":"Segmentation to Vector","task":"Convert segmentation masks to vector format","source":"custom"}];
+const VARIANTS = [{"category_id":"ImgProc","storage":"monolithic","output":"image","parallelism":"external","user_profile":"enduser","gpu":"optional","model":"model_bundled","ecosystem":"python","io_strategy":"new_file","dim_handling":"per_channel_slice","nf_input":"tuple val(meta), path(image)","nf_output":"tuple val(meta), path(\"*_processed.{tif,tiff,png}\"), emit: processed","params":"preset name","qc":"PSNR/SSIM summary CSV; before/after thumbnail","meta_fields":["id","pixel_size_xy","pixel_size_z","bit_depth","n_channels"]},{"category_id":"ImgProc","storage":"monolithic","output":"image","parallelism":"external","user_profile":"developer","gpu":"optional","model":"model_input","ecosystem":"python","io_strategy":"new_file","dim_handling":"per_channel_slice","nf_input":"tuple val(meta), path(image), path(model_weights)","nf_output":"tuple val(meta), path(\"*_processed.{tif,tiff,png}\"), emit: processed","params":"model path, model config YAML, all hyperparameters","qc":"PSNR/SSIM summary CSV; before/after thumbnail; model metadata log","meta_fields":["id","pixel_size_xy","pixel_size_z","bit_depth","n_channels"]},{"category_id":"ImgProc","storage":"chunked","output":"image","parallelism":"internal","user_profile":"enduser","gpu":"optional","model":"model_bundled","ecosystem":"python","io_strategy":"new_group_same_zarr","dim_handling":"full_stack","nf_input":"tuple val(meta), path(zarr_dir)","nf_output":"tuple val(meta), path(zarr_dir), emit: processed","params":"preset name","qc":"PSNR/SSIM summary CSV; before/after thumbnail","meta_fields":["id","pixel_size_xy","pixel_size_z","bit_depth","n_channels"]},{"category_id":"ImgProc","storage":"chunked","output":"image","parallelism":"internal","user_profile":"developer","gpu":"optional","model":"model_input","ecosystem":"python","io_strategy":"new_group_same_zarr","dim_handling":"full_stack","nf_input":"tuple val(meta), path(zarr_dir), path(model_weights)","nf_output":"tuple val(meta), path(zarr_dir), emit: processed","params":"model path, model config, chunk overlap, all hyperparameters","qc":"PSNR/SSIM summary CSV; before/after thumbnail; model metadata log","meta_fields":["id","pixel_size_xy","pixel_size_z","bit_depth","n_channels"]},{"category_id":"Stitch","storage":"monolithic","output":"image","parallelism":"internal","user_profile":"enduser","gpu":"none","model":"none","ecosystem":"java_fiji","io_strategy":"new_file","dim_handling":"multi_tile","nf_input":"tuple val(meta), path(images, stageAs: 'tiles/*')","nf_output":"tuple val(meta), path(\"*_stitched.{tif,ome.tif}\"), emit: stitched","params":"fusion method","qc":"Registration error summary; overlap quality map","meta_fields":["id","pixel_size_xy","pixel_size_z","tile_layout","overlap_pct"]},{"category_id":"Stitch","storage":"monolithic","output":"image","parallelism":"internal","user_profile":"developer","gpu":"none","model":"none","ecosystem":"java_fiji","io_strategy":"new_file","dim_handling":"multi_tile","nf_input":"tuple val(meta), path(images, stageAs: 'tiles/*')","nf_output":"tuple val(meta), path(\"*_stitched.{tif,ome.tif}\"), emit: stitched","params":"registration method, fusion method, downsample, transform output, all params","qc":"Registration error summary; overlap quality map; transform matrices CSV","meta_fields":["id","pixel_size_xy","pixel_size_z","tile_layout","overlap_pct"]},{"category_id":"Stitch","storage":"chunked","output":"image","parallelism":"internal","user_profile":"enduser","gpu":"none","model":"none","ecosystem":"java_fiji","io_strategy":"new_zarr_symlink_meta","dim_handling":"multi_tile","nf_input":"tuple val(meta), path(zarr_dir)","nf_output":"tuple val(meta), path(\"${meta.id}_stitched.zarr\"), emit: stitched","params":"fusion method","qc":"Registration error summary","meta_fields":["id","pixel_size_xy","pixel_size_z","tile_layout","overlap_pct"]},{"category_id":"Stitch","storage":"chunked","output":"image","parallelism":"internal","user_profile":"developer","gpu":"none","model":"none","ecosystem":"java_fiji","io_strategy":"new_zarr_symlink_meta","dim_handling":"multi_tile","nf_input":"tuple val(meta), path(zarr_dir)","nf_output":"tuple val(meta), path(\"${meta.id}_stitched.zarr\"), emit: stitched","params":"all registration/fusion params","qc":"Registration error summary; transform matrices CSV","meta_fields":["id","pixel_size_xy","pixel_size_z","tile_layout","overlap_pct"]},{"category_id":"ObjSeg","storage":"monolithic","output":"mask","parallelism":"external","user_profile":"enduser","gpu":"optional","model":"model_bundled","ecosystem":"python","io_strategy":"new_file","dim_handling":"per_channel_slice","nf_input":"tuple val(meta), path(image)","nf_output":"tuple val(meta), path(\"*_labels.{tif,tiff}\"), emit: labels","params":"model name, diameter","qc":"Object count; mean area; segmentation overlay PNG; DICE if GT","meta_fields":["id","pixel_size_xy","pixel_size_z","n_channels","channel_names"]},{"category_id":"ObjSeg","storage":"monolithic","output":"mask","parallelism":"external","user_profile":"developer","gpu":"optional","model":"model_input","ecosystem":"python","io_strategy":"new_file","dim_handling":"per_channel_slice","nf_input":"tuple val(meta), path(image), path(model_weights)","nf_output":"tuple val(meta), path(\"*_labels.{tif,tiff}\"), emit: labels","params":"model path, model config, diameter, flow_threshold, cellprob_threshold, all params","qc":"Object count; mean area; overlay PNG; DICE if GT; model metadata log","meta_fields":["id","pixel_size_xy","pixel_size_z","n_channels","channel_names"]},{"category_id":"ObjSeg","storage":"monolithic","output":"vector","parallelism":"external","user_profile":"enduser","gpu":"optional","model":"model_bundled","ecosystem":"python","io_strategy":"new_file","dim_handling":"per_channel_slice","nf_input":"tuple val(meta), path(image)","nf_output":"tuple val(meta), path(\"*_labels.{geojson,wkt}\"), emit: polygons","params":"model name, diameter, simplify tolerance","qc":"Object count; polygon overlay PNG","meta_fields":["id","pixel_size_xy","n_channels","channel_names"]},{"category_id":"ObjSeg","storage":"monolithic","output":"vector","parallelism":"external","user_profile":"developer","gpu":"optional","model":"model_input","ecosystem":"python","io_strategy":"new_file","dim_handling":"per_channel_slice","nf_input":"tuple val(meta), path(image), path(model_weights)","nf_output":"tuple val(meta), path(\"*_labels.{geojson,wkt}\"), emit: polygons","params":"model path, all params, simplify tolerance","qc":"Object count; overlay PNG; model metadata log","meta_fields":["id","pixel_size_xy","n_channels","channel_names"]},{"category_id":"ObjSeg","storage":"chunked","output":"mask","parallelism":"internal","user_profile":"enduser","gpu":"optional","model":"model_bundled","ecosystem":"python","io_strategy":"new_zarr_symlink_labels","dim_handling":"full_stack","nf_input":"tuple val(meta), path(zarr_dir)","nf_output":"tuple val(meta), path(\"${meta.id}_seg.zarr\"), emit: labels","params":"model name, diameter","qc":"Object count; segmentation overlay PNG","meta_fields":["id","pixel_size_xy","pixel_size_z","n_channels","channel_names"]},{"category_id":"ObjSeg","storage":"chunked","output":"mask","parallelism":"internal","user_profile":"developer","gpu":"optional","model":"model_input","ecosystem":"python","io_strategy":"new_zarr_symlink_labels","dim_handling":"full_stack","nf_input":"tuple val(meta), path(zarr_dir), path(model_weights)","nf_output":"tuple val(meta), path(\"${meta.id}_seg.zarr\"), emit: labels","params":"model path, model config, chunk overlap, all params","qc":"Object count; overlay PNG; model metadata log","meta_fields":["id","pixel_size_xy","pixel_size_z","n_channels","channel_names"]},{"category_id":"PixCla","storage":"monolithic","output":"mask","parallelism":"external","user_profile":"enduser","gpu":"optional","model":"model_bundled","ecosystem":"python","io_strategy":"new_file","dim_handling":"per_channel_slice","nf_input":"tuple val(meta), path(image)","nf_output":"tuple val(meta), path(\"*_class.{tif,tiff}\"), emit: classes","params":"model name, class names","qc":"Class distribution histogram; overlay PNG; F1/accuracy if GT","meta_fields":["id","pixel_size_xy","pixel_size_z","n_channels"]},{"category_id":"PixCla","storage":"monolithic","output":"mask","parallelism":"external","user_profile":"developer","gpu":"optional","model":"model_input","ecosystem":"python","io_strategy":"new_file","dim_handling":"per_channel_slice","nf_input":"tuple val(meta), path(image), path(model_weights)","nf_output":"tuple val(meta), path(\"*_class.{tif,tiff}\"), emit: classes","params":"model path, config, class names, threshold, all params","qc":"Class histogram; overlay PNG; F1 if GT; model metadata log","meta_fields":["id","pixel_size_xy","pixel_size_z","n_channels"]},{"category_id":"PixCla","storage":"chunked","output":"mask","parallelism":"internal","user_profile":"enduser","gpu":"optional","model":"model_bundled","ecosystem":"python","io_strategy":"new_zarr_symlink_labels","dim_handling":"full_stack","nf_input":"tuple val(meta), path(zarr_dir)","nf_output":"tuple val(meta), path(\"${meta.id}_class.zarr\"), emit: classes","params":"model name, class names","qc":"Class distribution histogram; overlay PNG","meta_fields":["id","pixel_size_xy","pixel_size_z","n_channels"]},{"category_id":"PixCla","storage":"chunked","output":"mask","parallelism":"internal","user_profile":"developer","gpu":"optional","model":"model_input","ecosystem":"python","io_strategy":"new_zarr_symlink_labels","dim_handling":"full_stack","nf_input":"tuple val(meta), path(zarr_dir), path(model_weights)","nf_output":"tuple val(meta), path(\"${meta.id}_class.zarr\"), emit: classes","params":"model path, config, chunk overlap, all params","qc":"Class histogram; overlay PNG; model metadata log","meta_fields":["id","pixel_size_xy","pixel_size_z","n_channels"]},{"category_id":"ObjDet","storage":"monolithic","output":"points","parallelism":"external","user_profile":"enduser","gpu":"optional","model":"model_bundled","ecosystem":"python","io_strategy":"new_file","dim_handling":"per_channel_slice","nf_input":"tuple val(meta), path(image)","nf_output":"tuple val(meta), path(\"*_detections.{csv,tif}\"), emit: detections","params":"detector type, spot size","qc":"Detection count; overlay PNG; F1/precision/recall if GT","meta_fields":["id","pixel_size_xy","pixel_size_z","n_channels"]},{"category_id":"ObjDet","storage":"monolithic","output":"points","parallelism":"external","user_profile":"developer","gpu":"optional","model":"model_input","ecosystem":"python","io_strategy":"new_file","dim_handling":"per_channel_slice","nf_input":"tuple val(meta), path(image), path(model_weights)","nf_output":"tuple val(meta), path(\"*_detections.{csv,tif}\"), emit: detections","params":"model path, config, all thresholds, NMS params","qc":"Detection count; overlay PNG; F1 if GT; model metadata log","meta_fields":["id","pixel_size_xy","pixel_size_z","n_channels"]},{"category_id":"ObjDet","storage":"chunked","output":"tabular","parallelism":"internal","user_profile":"enduser","gpu":"optional","model":"model_bundled","ecosystem":"python","io_strategy":"read_only_new_file","dim_handling":"full_stack","nf_input":"tuple val(meta), path(zarr_dir)","nf_output":"tuple val(meta), path(\"*_detections.csv\"), emit: detections","params":"detector type, spot size","qc":"Detection count; spatial density map","meta_fields":["id","pixel_size_xy","pixel_size_z","n_channels"]},{"category_id":"ObjDet","storage":"chunked","output":"tabular","parallelism":"internal","user_profile":"developer","gpu":"optional","model":"model_input","ecosystem":"python","io_strategy":"read_only_new_file","dim_handling":"full_stack","nf_input":"tuple val(meta), path(zarr_dir), path(model_weights)","nf_output":"tuple val(meta), path(\"*_detections.csv\"), emit: detections","params":"model path, config, chunk overlap, dedup distance, all params","qc":"Detection count; density map; model metadata log","meta_fields":["id","pixel_size_xy","pixel_size_z","n_channels"]},{"category_id":"SptCnt","storage":"monolithic","output":"scalar","parallelism":"external","user_profile":"enduser","gpu":"optional","model":"model_bundled","ecosystem":"python","io_strategy":"new_file","dim_handling":"per_channel_slice","nf_input":"tuple val(meta), path(image)","nf_output":"tuple val(meta), path(\"*_counts.csv\"), emit: counts","params":"counting method, object size","qc":"Count per FOV; REC if GT","meta_fields":["id","pixel_size_xy","n_channels"]},{"category_id":"SptCnt","storage":"monolithic","output":"scalar","parallelism":"external","user_profile":"developer","gpu":"optional","model":"model_input","ecosystem":"python","io_strategy":"new_file","dim_handling":"per_channel_slice","nf_input":"tuple val(meta), path(image), path(model_weights)","nf_output":"tuple val(meta), path(\"*_counts.csv\"), emit: counts","params":"model path, config, all params","qc":"Count per FOV; REC if GT; model metadata log","meta_fields":["id","pixel_size_xy","n_channels"]},{"category_id":"SptCnt","storage":"chunked","output":"scalar","parallelism":"internal","user_profile":"enduser","gpu":"optional","model":"model_bundled","ecosystem":"python","io_strategy":"read_only_new_file","dim_handling":"full_stack","nf_input":"tuple val(meta), path(zarr_dir)","nf_output":"tuple val(meta), path(\"*_counts.csv\"), emit: counts","params":"counting method, object size","qc":"Count summary; spatial density map","meta_fields":["id","pixel_size_xy","n_channels"]},{"category_id":"LndDet","storage":"monolithic","output":"classmask","parallelism":"external","user_profile":"enduser","gpu":"optional","model":"model_bundled","ecosystem":"python","io_strategy":"new_file","dim_handling":"per_channel_slice","nf_input":"tuple val(meta), path(image)","nf_output":"tuple val(meta), path(\"*_landmarks.{csv,tif}\"), emit: landmarks","params":"model name, n_landmarks","qc":"Landmark count; MRE if GT; overlay PNG","meta_fields":["id","pixel_size_xy","n_channels","n_landmarks"]},{"category_id":"LndDet","storage":"monolithic","output":"classmask","parallelism":"external","user_profile":"developer","gpu":"optional","model":"model_input","ecosystem":"python","io_strategy":"new_file","dim_handling":"per_channel_slice","nf_input":"tuple val(meta), path(image), path(model_weights)","nf_output":"tuple val(meta), path(\"*_landmarks.{csv,tif}\"), emit: landmarks","params":"model path, config, n_landmarks, confidence threshold, all params","qc":"Landmark count; MRE if GT; overlay PNG; model metadata log","meta_fields":["id","pixel_size_xy","n_channels","n_landmarks"]},{"category_id":"TreTrc","storage":"monolithic","output":"swc","parallelism":"internal","user_profile":"enduser","gpu":"none","model":"none","ecosystem":"java_fiji","io_strategy":"new_file","dim_handling":"full_volume","nf_input":"tuple val(meta), path(image)","nf_output":"tuple val(meta), path(\"*_trace.swc\"), emit: traces","params":"tracing method, seed strategy","qc":"Branch count; total length; skeleton overlay; NetMets if GT","meta_fields":["id","pixel_size_xy","pixel_size_z"]},{"category_id":"TreTrc","storage":"monolithic","output":"swc","parallelism":"internal","user_profile":"developer","gpu":"none","model":"none","ecosystem":"java_fiji","io_strategy":"new_file","dim_handling":"full_volume","nf_input":"tuple val(meta), path(image)","nf_output":"tuple val(meta), path(\"*_trace.swc\"), emit: traces","params":"tracing method, seed strategy, pruning, gap distance, all SNT params","qc":"Branch count; total length; overlay; NetMets if GT; param dump","meta_fields":["id","pixel_size_xy","pixel_size_z"]},{"category_id":"LooTrc","storage":"monolithic","output":"skeleton","parallelism":"internal","user_profile":"enduser","gpu":"none","model":"none","ecosystem":"java_fiji","io_strategy":"new_file","dim_handling":"full_volume","nf_input":"tuple val(meta), path(image)","nf_output":"tuple val(meta), path(\"*_skeleton.{tif,tiff}\"), emit: skeleton","params":"skeletonisation method","qc":"Network stats; skeleton overlay; NetMets if GT","meta_fields":["id","pixel_size_xy","pixel_size_z"]},{"category_id":"LooTrc","storage":"monolithic","output":"skeleton","parallelism":"internal","user_profile":"developer","gpu":"none","model":"none","ecosystem":"java_fiji","io_strategy":"new_file","dim_handling":"full_volume","nf_input":"tuple val(meta), path(image)","nf_output":"tuple val(meta), path(\"*_skeleton.{tif,tiff}\"), emit: skeleton","params":"method, pruning, min branch length, all params","qc":"Network stats; overlay; NetMets if GT; param dump","meta_fields":["id","pixel_size_xy","pixel_size_z"]},{"category_id":"PrtTrk","storage":"monolithic","output":"track","parallelism":"internal","user_profile":"enduser","gpu":"none","model":"none","ecosystem":"java_fiji","io_strategy":"new_file","dim_handling":"full_timelapse","nf_input":"tuple val(meta), path(images, stageAs: 'frames/*')","nf_output":"tuple val(meta), path(\"*_tracks.{csv,tif}\"), emit: tracks","params":"max linking distance, max gap frames","qc":"Track count; mean displacement; overlay; FNPSB/JST if GT","meta_fields":["id","pixel_size_xy","pixel_size_z","time_interval","n_timepoints"]},{"category_id":"PrtTrk","storage":"monolithic","output":"track","parallelism":"internal","user_profile":"developer","gpu":"none","model":"none","ecosystem":"java_fiji","io_strategy":"new_file","dim_handling":"full_timelapse","nf_input":"tuple val(meta), path(images, stageAs: 'frames/*')","nf_output":"tuple val(meta), path(\"*_tracks.{csv,tif}\"), emit: tracks","params":"detector, linking method, max distance, gap closing, Kalman params, all","qc":"Track count; displacement; overlay; FNPSB/JST if GT; param dump","meta_fields":["id","pixel_size_xy","pixel_size_z","time_interval","n_timepoints"]},{"category_id":"PrtTrk","storage":"chunked","output":"track","parallelism":"internal","user_profile":"enduser","gpu":"none","model":"none","ecosystem":"python","io_strategy":"read_only_new_file","dim_handling":"full_timelapse","nf_input":"tuple val(meta), path(zarr_dir)","nf_output":"tuple val(meta), path(\"*_tracks.csv\"), emit: tracks","params":"max linking distance, max gap frames","qc":"Track count; mean displacement; overlay","meta_fields":["id","pixel_size_xy","pixel_size_z","time_interval","n_timepoints"]},{"category_id":"ObjTrk","storage":"monolithic","output":"track+div","parallelism":"internal","user_profile":"enduser","gpu":"optional","model":"model_bundled","ecosystem":"python","io_strategy":"new_file","dim_handling":"full_timelapse","nf_input":"tuple val(meta), path(images, stageAs: 'frames/*')","nf_output":"tuple val(meta), path(\"*_tracks/\"), emit: tracks","params":"model name / tracker type","qc":"Track count; division count; SEG/TRA if GT; lineage tree PNG","meta_fields":["id","pixel_size_xy","pixel_size_z","time_interval","n_timepoints","n_channels"]},{"category_id":"ObjTrk","storage":"monolithic","output":"track+div","parallelism":"internal","user_profile":"developer","gpu":"optional","model":"model_input","ecosystem":"python","io_strategy":"new_file","dim_handling":"full_timelapse","nf_input":"tuple val(meta), path(images, stageAs: 'frames/*'), path(model_weights)","nf_output":"tuple val(meta), path(\"*_tracks/\"), emit: tracks","params":"model path, config, seg params, linking params, division params, all","qc":"Track count; division count; SEG/TRA if GT; lineage PNG; model metadata log","meta_fields":["id","pixel_size_xy","pixel_size_z","time_interval","n_timepoints","n_channels"]},{"category_id":"ObjTrk","storage":"chunked","output":"track+div","parallelism":"internal","user_profile":"enduser","gpu":"optional","model":"model_bundled","ecosystem":"python","io_strategy":"new_zarr_symlink_labels","dim_handling":"full_timelapse","nf_input":"tuple val(meta), path(zarr_dir)","nf_output":"tuple val(meta), path(\"${meta.id}_tracked.zarr\"), emit: labels\n    tuple val(meta), path(\"*_division.txt\"), emit: divisions","params":"model name / tracker type","qc":"Track count; division count; lineage tree PNG","meta_fields":["id","pixel_size_xy","pixel_size_z","time_interval","n_timepoints","n_channels"]},{"category_id":"ObjTrk","storage":"chunked","output":"track+div","parallelism":"internal","user_profile":"developer","gpu":"optional","model":"model_input","ecosystem":"python","io_strategy":"new_zarr_symlink_labels","dim_handling":"full_timelapse","nf_input":"tuple val(meta), path(zarr_dir), path(model_weights)","nf_output":"tuple val(meta), path(\"${meta.id}_tracked.zarr\"), emit: labels\n    tuple val(meta), path(\"*_division.txt\"), emit: divisions","params":"model path, config, seg params, linking params, all","qc":"Track count; division count; lineage PNG; model metadata log","meta_fields":["id","pixel_size_xy","pixel_size_z","time_interval","n_timepoints","n_channels"]},{"category_id":"FeatExt","storage":"monolithic","output":"tabular","parallelism":"external","user_profile":"enduser","gpu":"none","model":"none","ecosystem":"python","io_strategy":"new_file","dim_handling":"per_channel_slice","nf_input":"tuple val(meta), path(image), path(labels)","nf_output":"tuple val(meta), path(\"*_features.csv\"), emit: features","params":"feature set name","qc":"Feature summary stats; correlation matrix; histogram per feature","meta_fields":["id","pixel_size_xy","pixel_size_z","n_channels","channel_names"]},{"category_id":"FeatExt","storage":"monolithic","output":"tabular","parallelism":"external","user_profile":"developer","gpu":"none","model":"none","ecosystem":"python","io_strategy":"new_file","dim_handling":"per_channel_slice","nf_input":"tuple val(meta), path(image), path(labels)","nf_output":"tuple val(meta), path(\"*_features.csv\"), emit: features","params":"feature list, channels, texture params","qc":"Feature summary stats; correlation matrix; histogram; param dump","meta_fields":["id","pixel_size_xy","pixel_size_z","n_channels","channel_names"]},{"category_id":"FeatExt","storage":"chunked","output":"tabular","parallelism":"internal","user_profile":"enduser","gpu":"none","model":"none","ecosystem":"python","io_strategy":"read_only_new_file","dim_handling":"full_stack","nf_input":"tuple val(meta), path(zarr_dir)","nf_output":"tuple val(meta), path(\"*_features.csv\"), emit: features","params":"feature set name","qc":"Feature summary stats; correlation matrix","meta_fields":["id","pixel_size_xy","pixel_size_z","n_channels","channel_names"]},{"category_id":"Raster","storage":"monolithic","output":"mask","parallelism":"external","user_profile":"enduser","gpu":"none","model":"none","ecosystem":"python","io_strategy":"new_file","dim_handling":"single_plane","nf_input":"tuple val(meta), path(geojson), val(image_shape)","nf_output":"tuple val(meta), path(\"*_labels.tif\"), emit: labels","params":"\u2014","qc":"Label count; rasterised overlay PNG","meta_fields":["id","pixel_size_xy","image_width","image_height"]},{"category_id":"Raster","storage":"chunked","output":"mask","parallelism":"internal","user_profile":"enduser","gpu":"none","model":"none","ecosystem":"python","io_strategy":"new_zarr_symlink_labels","dim_handling":"single_plane","nf_input":"tuple val(meta), path(geojson), path(zarr_dir)","nf_output":"tuple val(meta), path(\"${meta.id}_raster.zarr\"), emit: labels","params":"\u2014","qc":"Label count","meta_fields":["id","pixel_size_xy"]},{"category_id":"Seg2Vec","storage":"monolithic","output":"vector","parallelism":"external","user_profile":"enduser","gpu":"none","model":"none","ecosystem":"python","io_strategy":"new_file","dim_handling":"single_plane","nf_input":"tuple val(meta), path(labels)","nf_output":"tuple val(meta), path(\"*_polygons.geojson\"), emit: polygons","params":"simplify tolerance","qc":"Polygon count; vertex count stats","meta_fields":["id","pixel_size_xy"]},{"category_id":"Seg2Vec","storage":"monolithic","output":"vector","parallelism":"external","user_profile":"developer","gpu":"none","model":"none","ecosystem":"python","io_strategy":"new_file","dim_handling":"single_plane","nf_input":"tuple val(meta), path(labels)","nf_output":"tuple val(meta), path(\"*_polygons.geojson\"), emit: polygons","params":"simplify tolerance, min area, hole handling, coord transform","qc":"Polygon count; vertex stats; param dump","meta_fields":["id","pixel_size_xy"]},{"category_id":"Seg2Vec","storage":"chunked","output":"vector","parallelism":"internal","user_profile":"enduser","gpu":"none","model":"none","ecosystem":"python","io_strategy":"read_only_new_file","dim_handling":"single_plane","nf_input":"tuple val(meta), path(zarr_dir)","nf_output":"tuple val(meta), path(\"*_polygons.geojson\"), emit: polygons","params":"simplify tolerance","qc":"Polygon count; vertex count stats","meta_fields":["id","pixel_size_xy"]}];
 
-/* Load schemas at build time — for GH Pages we inline the fetch from relative paths */
-const STORAGE_ABBR={"monolithic":"Mono","chunked":"Chnk"};
-const OUTPUT_ABBR={"image":"Img","mask":"Msk","vector":"Vec","tabular":"Tab","scalar":"Scl","skeleton":"Skl","swc":"SWC","track":"Trk","track+div":"TrkDiv","points":"Pts","classmask":"ClsMsk"};
-const PARALLEL_ABBR={"external":"Ext","internal":"Int"};
-const PROFILE_ABBR={"enduser":"EU","developer":"Dev"};
-const CAT_NAMES={"ImgProc":"ImageProcessing","Stitch":"StitchingRegistration","ObjSeg":"ObjectSegmentation","PixCla":"PixelVoxelClassification","ObjDet":"SpotObjectDetection","SptCnt":"SpotObjectCounting","LndDet":"LandmarkDetection","TreTrc":"FilamentTreeTracing","LooTrc":"FilamentNetworkTracing","PrtTrk":"ParticleTracking","ObjTrk":"ObjectTracking","FeatExt":"FeatureExtraction","Raster":"Rasterisation","Seg2Vec":"SegmentationToVector"};
-const OUTPUT_SUFFIX={"image":"_processed.tif","mask":"_labels.tif","vector":"_labels.geojson","tabular":"_features.csv","scalar":"_counts.csv","skeleton":"_skeleton.tif","swc":"_trace.swc","track":"_tracks.csv","track+div":"_tracks/","points":"_detections.csv","classmask":"_landmarks.csv"};
+const SA={"monolithic":"Mono","chunked":"Chnk"};
+const OA={"image":"Img","mask":"Msk","vector":"Vec","tabular":"Tab","scalar":"Scl","skeleton":"Skl","swc":"SWC","track":"Trk","track+div":"TrkDiv","points":"Pts","classmask":"ClsMsk"};
+const PA={"external":"Ext","internal":"Int"};
+const UA={"enduser":"EU","developer":"Dev"};
+const CN={"ImgProc":"ImageProcessing","Stitch":"StitchingRegistration","ObjSeg":"ObjectSegmentation","PixCla":"PixelVoxelClassification","ObjDet":"SpotObjectDetection","SptCnt":"SpotObjectCounting","LndDet":"LandmarkDetection","TreTrc":"FilamentTreeTracing","LooTrc":"FilamentNetworkTracing","PrtTrk":"ParticleTracking","ObjTrk":"ObjectTracking","FeatExt":"FeatureExtraction","Raster":"Rasterisation","Seg2Vec":"SegmentationToVector"};
+const OS={"image":"_processed.tif","mask":"_labels.tif","vector":"_labels.geojson","tabular":"_features.csv","scalar":"_counts.csv","skeleton":"_skeleton.tif","swc":"_trace.swc","track":"_tracks.csv","track+div":"_tracks/","points":"_detections.csv","classmask":"_landmarks.csv"};
 
-function getNames(catId,v){
-  const full=`${CAT_NAMES[catId]}_${{"monolithic":"Monolithic","chunked":"Chunked"}[v.storage]}_${OUTPUT_ABBR[v.output]==="Img"?"Image":OUTPUT_ABBR[v.output]}_${{"external":"External","internal":"Internal"}[v.parallelism]}_${{"enduser":"EndUser","developer":"Developer"}[v.user_profile]}`;
-  const abbr=`${catId}_${STORAGE_ABBR[v.storage]}_${OUTPUT_ABBR[v.output]}_${PARALLEL_ABBR[v.parallelism]}_${PROFILE_ABBR[v.user_profile]}`;
-  return{full,abbr,path:`templates/${v.storage}/${v.user_profile}/${catId.toLowerCase()}/`,process:abbr.toUpperCase()};
+function names(cid,v){
+  const abbr=`${cid}_${SA[v.storage]}_${OA[v.output]}_${PA[v.parallelism]}_${UA[v.user_profile]}`;
+  const full=`${CN[cid]}_${v.storage==="monolithic"?"Monolithic":"Chunked"}_${OA[v.output]}_${v.parallelism==="external"?"External":"Internal"}_${v.user_profile==="enduser"?"EndUser":"Developer"}`;
+  return{abbr,full,path:`templates/${v.storage}/${v.user_profile}/${cid.toLowerCase()}/`,proc:abbr.toUpperCase()};
 }
 
-function genMainNf(cat,v,names){
-  const tool=cat.id.toLowerCase();
-  const label=v.gpu==="optional"?"process_medium":v.gpu==="required"?"process_gpu":v.parallelism==="internal"?"process_high":"process_medium";
-  const vcmd=v.ecosystem==="python"?`python -m ${tool} --version 2>&1 | sed 's/.*//g'`:`fiji --headless --eval 'println(System.getProperty("fiji.version"))'`;
-  const pkg=v.ecosystem==="python"?tool:`fiji-${tool}`;
-  return `// Full name:    ${names.full}
-// Abbreviation: ${names.abbr}
-
-process ${names.process} {
-    tag "$meta.id"
-    label '${label}'
-
-    conda "bioconda::${pkg}=1.0.0"
-    container "${ 'workflow.containerEngine' }..."
-
-    input:
-    ${v.nf_input}
-
-    output:
-    ${v.nf_output}
-    tuple val("\${task.process}"), val('${tool}'), eval('${vcmd}'), emit: versions_${tool}, topic: versions
-
-    when:
-    task.ext.when == null || task.ext.when
-
-    script:
-    def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "\${meta.id}"
-    """
-    python -m ${tool} \\\\
-        --input ${v.storage==="chunked"?"\\${zarr_dir}":"\\${image}"} \\\\${v.model==="model_input"?"\n        --model \\${model_weights} \\\\":""}
-        --output \\${prefix}${OUTPUT_SUFFIX[v.output]||"_output.txt"} \\\\
-        \\$args
-    """
-
-    stub:
-    def prefix = task.ext.prefix ?: "\${meta.id}"
-    """
-    touch \\${prefix}${OUTPUT_SUFFIX[v.output]||"_output.txt"}
-    """
-}`;
+function genMain(cat,v,n){
+  const t=cat.id.toLowerCase();
+  const lb=v.gpu==="optional"?"process_medium":v.gpu==="required"?"process_gpu":v.parallelism==="internal"?"process_high":"process_medium";
+  const vc=v.ecosystem==="python"?`python -m ${t} --version 2>&1 | sed 's/.*//g'`:`fiji --headless --version`;
+  return `// Full:  ${n.full}\n// Abbr:  ${n.abbr}\n\nprocess ${n.proc} {\n    tag "$meta.id"\n    label '${lb}'\n\n    conda "bioconda::${t}=1.0.0"\n\n    input:\n    ${v.nf_input}\n\n    output:\n    ${v.nf_output}\n    tuple val("\${task.process}"), val('${t}'), eval('${vc}'), emit: versions_${t}, topic: versions\n\n    when:\n    task.ext.when == null || task.ext.when\n\n    script:\n    def args = task.ext.args ?: ''\n    def prefix = task.ext.prefix ?: "\${meta.id}"\n    """\n    python -m ${t} \\\\\n        --input \${${v.storage==="chunked"?"zarr_dir":"image"}} \\\\${v.model==="model_input"?"\n        --model \${model_weights} \\\\":""}\n        --output \${prefix}${OS[v.output]||"_out"} \\\\\n        $args\n    """\n\n    stub:\n    def prefix = task.ext.prefix ?: "\${meta.id}"\n    """\n    touch \${prefix}${OS[v.output]||"_out"}\n    """\n}`;
 }
 
-function genMetaYml(cat,v,names){
-  const tool=cat.id.toLowerCase();
-  return `# Full name:    ${names.full}
-# Abbreviation: ${names.abbr}
-
-name: "${names.abbr.toLowerCase()}"
-description: |
-  ${cat.task}
-  Storage: ${v.storage} | Profile: ${v.user_profile}
-keywords: [bioimage, ${tool}, ${v.storage}, ${v.output}]
-tools:
-  - "${tool}":
-      description: "${cat.task}"
-      licence: ["MIT"]
-input:
-  - meta:
-      type: map
-      description: Sample metadata map
-${v.storage==="chunked"?`  - zarr_dir:
-      type: directory
-      pattern: "*.zarr"`:`  - image:
-      type: file
-      pattern: "*.{tif,tiff,png}"`}${v.model==="model_input"?`
-  - model_weights:
-      type: file
-      pattern: "*.{pth,h5,onnx,pt}"`:""}
-topics:
-  versions:
-    - - "\${task.process}": {type: string}
-      - "${tool}": {type: string}
-      - eval: {type: eval}`;
+function genMeta(cat,v,n){
+  const t=cat.id.toLowerCase();
+  return `# ${n.full}\nname: "${n.abbr.toLowerCase()}"\ndescription: |\n  ${cat.task}\nkeywords: [bioimage, ${t}, ${v.storage}, ${v.output}]\ninput:\n  - meta: {type: map}\n${v.storage==="chunked"?"  - zarr_dir: {type: directory, pattern: '*.zarr'}":"  - image: {type: file, pattern: '*.{tif,tiff,png}'}"}${v.model==="model_input"?"\n  - model_weights: {type: file, pattern: '*.{pth,h5,onnx,pt}'}":""}\ntopics:\n  versions:\n    - - "\${task.process}": {type: string}\n      - "${t}": {type: string}\n      - eval: {type: eval}`;
 }
 
-function genTest(cat,v,names){
-  return `// ${names.abbr}
-nextflow_process {
-    name "Test ${names.process}"
-    script "../main.nf"
-    process "${names.process}"
-
-    test("Should run ${cat.id} ${v.storage} ${v.user_profile}") {
-        when {
-            process {
-                """
-                input[0] = [
-                    [id: 'test', pixel_size_xy: 0.65],
-                    file(params.test_data['${v.storage==="chunked"?"zarr":"image"}'], checkIfExists: true)${v.model==="model_input"?`,
-                    file(params.test_data['model'], checkIfExists: true)`:""}
-                ]
-                """
-            }
-        }
-        then {
-            assertAll(
-                { assert process.success },
-                { assert snapshot(process.out).match() },
-                { assert process.out.findAll { key, val -> key.startsWith('versions') } }
-            )
-        }
-    }
-}`;
+function genTest(cat,v,n){
+  return `// ${n.abbr}\nnextflow_process {\n    name "Test ${n.proc}"\n    script "../main.nf"\n    process "${n.proc}"\n\n    test("${cat.id} ${v.storage} ${v.user_profile}") {\n        when {\n            process {\n                """\n                input[0] = [\n                    [id:'test', pixel_size_xy:0.65],\n                    file(params.test_data['${v.storage==="chunked"?"zarr":"image"}'], checkIfExists:true)${v.model==="model_input"?",\n                    file(params.test_data['model'], checkIfExists:true)":""}\n                ]\n                """\n            }\n        }\n        then {\n            assertAll(\n                { assert process.success },\n                { assert snapshot(process.out).match() }\n            )\n        }\n    }\n}`;
 }
 
-function genModulesConfig(cat,v,names){
-  const paramLines=(v.params||"").split(",").map(p=>`            // ${p.trim()}`).join("\n");
-  return `// ${names.abbr}
-process {
-    withName: '${names.process}' {
-        ext.args = [
-${paramLines}
-        ].join(' ')
-        publishDir = [
-            path: { "\${params.outdir}/${cat.id.toLowerCase()}" },
-            mode: params.publish_dir_mode,
-            saveAs: { fn -> fn == 'versions.yml' ? null : fn }
-        ]
-    }
-}`;
+function genConf(cat,v,n){
+  const ps=(v.params||"").split(",").map(p=>`            // ${p.trim()}`).join("\n");
+  return `// ${n.abbr}\nprocess {\n    withName: '${n.proc}' {\n        ext.args = [\n${ps}\n        ].join(' ')\n        publishDir = [\n            path: { "\${params.outdir}/${cat.id.toLowerCase()}" },\n            mode: params.publish_dir_mode\n        ]\n    }\n}`;
 }
 
-function App(){
-  const[cats,setCats]=useState(null);
-  const[variants,setVariants]=useState(null);
-  const[selCat,setSelCat]=useState(null);
-  const[selVar,setSelVar]=useState(null);
-  const[tab,setTab]=useState("main.nf");
-  const[copied,setCopied]=useState(false);
+let st = { selCat: null, selVar: null, tab: "main.nf" };
+const catMap = Object.fromEntries(CATS.map(c=>[c.id,c]));
+const catIds = [...new Set(VARIANTS.map(v=>v.category_id))];
 
-  React.useEffect(()=>{
-    fetch("categories.json").then(r=>r.json()).then(setCats).catch(()=>{});
-    fetch("variants.json").then(r=>r.json()).then(setVariants).catch(()=>{});
-  },[]);
-
-  if(!cats||!variants) return e("div",{style:{padding:40,textAlign:"center",color:"#64748b"}},"Loading schemas...");
-
-  const catMap=Object.fromEntries(cats.map(c=>[c.id,c]));
-  const catIds=[...new Set(variants.map(v=>v.category_id))];
+function render(){
+  const app=document.getElementById("app");
+  app.innerHTML="";
+  const{selCat,selVar,tab}=st;
   const cat=catMap[selCat];
-  const catVariants=variants.filter(v=>v.category_id===selCat);
-  const variant=catVariants[selVar];
-  const names=cat&&variant?getNames(cat.id,variant):null;
+  const cvars=VARIANTS.filter(v=>v.category_id===selCat);
+  const v=cvars[selVar];
+  const n=cat&&v?names(cat.id,v):null;
 
-  const tabs=["main.nf","meta.yml","test/main.nf.test","modules.config"];
-  let code="";
-  if(cat&&variant&&names){
-    if(tab==="main.nf") code=genMainNf(cat,variant,names);
-    else if(tab==="meta.yml") code=genMetaYml(cat,variant,names);
-    else if(tab==="test/main.nf.test") code=genTest(cat,variant,names);
-    else code=genModulesConfig(cat,variant,names);
+  app.innerHTML+=`<h2 style="font-size:20px;font-weight:700;margin:0 0 4px">nf-core Module Templates</h2>`;
+  app.innerHTML+=`<p style="font-size:13px;color:#475569;margin:0 0 14px">Select category → variant → browse files</p>`;
+
+  const cb=document.createElement("div");cb.className="cat-btns";
+  catIds.forEach(id=>{
+    const b=document.createElement("button");b.className=`cbtn${selCat===id?" on":""}`;b.textContent=id;
+    b.onclick=()=>{st.selCat=id;st.selVar=null;render()};cb.appendChild(b);
+  });
+  app.appendChild(cb);
+
+  if(cat){
+    const vl=document.createElement("div");vl.style.cssText="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px";
+    vl.textContent=`${cat.category} — ${cvars.length} variants:`;app.appendChild(vl);
+    const vb=document.createElement("div");vb.className="var-btns";
+    cvars.forEach((cv,i)=>{
+      const b=document.createElement("button");b.className=`vbtn${selVar===i?" on":""}`;
+      b.innerHTML=`${cv.user_profile==="enduser"?"👤":"🛠"} ${cv.storage} → ${cv.output}`;
+      b.onclick=()=>{st.selVar=i;st.tab="main.nf";render()};vb.appendChild(b);
+    });
+    app.appendChild(vb);
   }
 
-  return e("div",{style:{fontFamily:"system-ui",color:"#1e293b",padding:16,lineHeight:1.5}},
-    e("h2",{style:{fontSize:20,fontWeight:700,margin:"0 0 4px"}},"nf-core Module Templates"),
-    e("p",{style:{fontSize:13,color:"#475569",margin:"0 0 14px"}},"Select category → variant → browse generated files"),
+  if(n){
+    const nb=document.createElement("div");nb.className="name-box";
+    nb.innerHTML=`<div class="name-grid"><span class="lbl">Full:</span><code>${n.full}</code><span class="lbl">Abbr:</span><code style="font-weight:700">${n.abbr}</code><span class="lbl">Path:</span><code style="font-size:11px;color:#475569">${n.path}</code><span class="lbl">Process:</span><code style="font-size:11px;color:#475569">${n.proc}</code></div>`;
+    app.appendChild(nb);
 
-    e("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}},
-      catIds.map(id=>e("button",{key:id,onClick:()=>{setSelCat(id);setSelVar(null)},style:{padding:"5px 12px",borderRadius:8,fontSize:12,cursor:"pointer",border:selCat===id?"2px solid #1e293b":"1.5px solid #cbd5e1",background:selCat===id?"#1e293b":"#fff",color:selCat===id?"#fff":"#334155",fontWeight:selCat===id?700:500}},id))),
+    const tabs=document.createElement("div");tabs.className="tabs";
+    ["main.nf","meta.yml","test/main.nf.test","modules.config"].forEach(t=>{
+      const b=document.createElement("button");b.className=tab===t?"on":"";b.textContent=t;
+      b.onclick=()=>{st.tab=t;render()};tabs.appendChild(b);
+    });
+    app.appendChild(tabs);
 
-    cat&&e("div",{style:{marginBottom:14}},
-      e("div",{style:{fontSize:12,fontWeight:600,color:"#64748b",marginBottom:6}},cat.category," — ",catVariants.length," variants:"),
-      e("div",{style:{display:"flex",gap:6,flexWrap:"wrap"}},
-        catVariants.map((v,vi)=>e("button",{key:vi,onClick:()=>{setSelVar(vi);setTab("main.nf")},style:{padding:"5px 12px",borderRadius:8,fontSize:11,cursor:"pointer",textAlign:"left",border:selVar===vi?"2px solid #334155":"1.5px solid #cbd5e1",background:selVar===vi?"#f0fdf4":"#fff",color:"#334155",fontWeight:selVar===vi?700:500}},
-          e("div",null,v.user_profile==="enduser"?"👤":"🛠"," ",v.storage," → ",v.output),
-          names&&selVar===vi&&e("div",{style:{fontSize:9,fontFamily:"monospace",color:"#64748b",marginTop:2}},getNames(cat.id,v).abbr))))),
+    let code="";
+    if(tab==="main.nf")code=genMain(cat,v,n);
+    else if(tab==="meta.yml")code=genMeta(cat,v,n);
+    else if(tab==="test/main.nf.test")code=genTest(cat,v,n);
+    else code=genConf(cat,v,n);
 
-    names&&e("div",null,
-      e("div",{style:{background:"#f8fafc",border:"1.5px solid #e2e8f0",borderRadius:10,padding:"12px 14px",marginBottom:12}},
-        e("div",{style:{display:"grid",gridTemplateColumns:"auto 1fr",gap:"4px 12px",fontSize:12}},
-          e("span",{style:{fontWeight:700,color:"#64748b"}},"Full:"),e("code",{style:{fontFamily:"monospace",color:"#0f172a"}},names.full),
-          e("span",{style:{fontWeight:700,color:"#64748b"}},"Abbr:"),e("code",{style:{fontFamily:"monospace",color:"#0f172a",fontWeight:700}},names.abbr),
-          e("span",{style:{fontWeight:700,color:"#64748b"}},"Path:"),e("code",{style:{fontFamily:"monospace",color:"#475569",fontSize:11}},names.path),
-          e("span",{style:{fontWeight:700,color:"#64748b"}},"Process:"),e("code",{style:{fontFamily:"monospace",color:"#475569",fontSize:11}},names.process))),
+    const ch=document.createElement("div");ch.className="code-head";
+    ch.innerHTML=`<span>${tab}</span>`;
+    const cp=document.createElement("button");cp.className="copy-btn";cp.textContent="Copy";
+    cp.onclick=()=>{navigator.clipboard.writeText(code);cp.textContent="✓ Copied";setTimeout(()=>{cp.textContent="Copy"},2000)};
+    ch.appendChild(cp);app.appendChild(ch);
 
-      e("div",{className:"tab-bar",style:{display:"flex",gap:2}},
-        tabs.map(t=>e("button",{key:t,className:tab===t?"active":"",onClick:()=>setTab(t)},t))),
+    const pre=document.createElement("pre");pre.textContent=code;app.appendChild(pre);
+  }
 
-      e("div",null,
-        e("div",{className:"code-header"},
-          e("span",null,tab),
-          e("button",{className:"copy-btn",onClick:()=>{navigator.clipboard.writeText(code);setCopied(true);setTimeout(()=>setCopied(false),2000)}},copied?"✓ Copied":"Copy")),
-        e("pre",null,code))),
-
-    !selCat&&e("div",{style:{padding:40,textAlign:"center",color:"#94a3b8"}},"↑ Select a category"),
-    selCat&&selVar===null&&e("div",{style:{padding:20,textAlign:"center",color:"#94a3b8"}},"↑ Select a variant"));
+  if(!selCat) app.innerHTML+=`<div class="hint">↑ Select a category</div>`;
+  else if(selVar===null) app.innerHTML+=`<div class="hint">↑ Select a variant</div>`;
 }
-
-ReactDOM.render(React.createElement(App), document.getElementById('root'));
+render();
 </script>
 </body>
 </html>
