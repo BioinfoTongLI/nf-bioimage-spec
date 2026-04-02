@@ -1,0 +1,29 @@
+// Full name:    ImageProcessing_Monolithic_Image_External_Developer
+// Abbreviation: ImgProc_Mono_Img_Ext_Dev
+
+nextflow_process {
+    name "Test IMGPROC_MONO_IMG_EXT_DEV"
+    script "../main.nf"
+    process "IMGPROC_MONO_IMG_EXT_DEV"
+
+    test("Should run ImgProc monolithic developer") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [id: 'test', pixel_size_xy: 0.65],
+                    file(params.test_data['image'], checkIfExists: true),
+                    file(params.test_data['model'], checkIfExists: true)
+                ]
+                """
+            }
+        }
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() },
+                { assert process.out.findAll { key, val -> key.startsWith('versions') } }
+            )
+        }
+    }
+}

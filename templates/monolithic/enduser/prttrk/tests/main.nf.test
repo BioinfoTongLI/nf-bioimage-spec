@@ -1,0 +1,28 @@
+// Full name:    ParticleTracking_Monolithic_Tracks_Internal_EndUser
+// Abbreviation: PrtTrk_Mono_Trk_Int_EU
+
+nextflow_process {
+    name "Test PRTTRK_MONO_TRK_INT_EU"
+    script "../main.nf"
+    process "PRTTRK_MONO_TRK_INT_EU"
+
+    test("Should run PrtTrk monolithic enduser") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [id: 'test', pixel_size_xy: 0.65],
+                    file(params.test_data['image'], checkIfExists: true)
+                ]
+                """
+            }
+        }
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() },
+                { assert process.out.findAll { key, val -> key.startsWith('versions') } }
+            )
+        }
+    }
+}

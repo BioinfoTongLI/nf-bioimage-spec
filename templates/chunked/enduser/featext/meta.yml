@@ -1,0 +1,43 @@
+# Full name:    FeatureExtraction_Chunked_Tabular_Internal_EndUser
+# Abbreviation: FeatExt_Chnk_Tab_Int_EU
+
+name: "featext_chnk_tab_int_eu"
+description: |
+  Measure morphological, intensity, or texture features
+  Storage: chunked | User profile: enduser
+keywords:
+  - bioimage
+  - featext
+  - chunked
+  - tabular
+tools:
+  - "featext":
+      description: "Measure morphological, intensity, or texture features"
+      homepage: "https://github.com/example/featext"
+      documentation: "https://github.com/example/featext/docs"
+      licence: ["MIT"]
+input:
+  - meta:
+      type: map
+      description: |
+        Groovy map containing sample metadata.
+        e.g. [id: 'sample1', pixel_size_xy: 0.65, pixel_size_z: 2.0]
+  - zarr_dir:
+      type: directory
+      description: Path to OME-Zarr directory
+      pattern: "*.zarr"
+output:
+  - meta:
+      type: map
+      description: Groovy map containing sample metadata
+topics:
+  versions:
+    - - "${task.process}":
+          type: string
+          description: The name of the process
+      - "featext":
+          type: string
+          description: The name of the tool
+      - "python -m featext --version 2>&1 | sed 's/.*//g'":
+          type: eval
+          description: The command used to obtain the version of the tool

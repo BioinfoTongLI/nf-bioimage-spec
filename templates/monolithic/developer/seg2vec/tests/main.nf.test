@@ -1,0 +1,28 @@
+// Full name:    SegmentationToVector_Monolithic_Vector_External_Developer
+// Abbreviation: Seg2Vec_Mono_Vec_Ext_Dev
+
+nextflow_process {
+    name "Test SEG2VEC_MONO_VEC_EXT_DEV"
+    script "../main.nf"
+    process "SEG2VEC_MONO_VEC_EXT_DEV"
+
+    test("Should run Seg2Vec monolithic developer") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [id: 'test', pixel_size_xy: 0.65],
+                    file(params.test_data['image'], checkIfExists: true)
+                ]
+                """
+            }
+        }
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() },
+                { assert process.out.findAll { key, val -> key.startsWith('versions') } }
+            )
+        }
+    }
+}

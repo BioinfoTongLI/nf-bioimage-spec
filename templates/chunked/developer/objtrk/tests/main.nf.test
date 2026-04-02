@@ -1,0 +1,29 @@
+// Full name:    ObjectTracking_Chunked_TracksWithDivision_Internal_Developer
+// Abbreviation: ObjTrk_Chnk_TrkDiv_Int_Dev
+
+nextflow_process {
+    name "Test OBJTRK_CHNK_TRKDIV_INT_DEV"
+    script "../main.nf"
+    process "OBJTRK_CHNK_TRKDIV_INT_DEV"
+
+    test("Should run ObjTrk chunked developer") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [id: 'test', pixel_size_xy: 0.65],
+                    file(params.test_data['zarr'], checkIfExists: true),
+                    file(params.test_data['model'], checkIfExists: true)
+                ]
+                """
+            }
+        }
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() },
+                { assert process.out.findAll { key, val -> key.startsWith('versions') } }
+            )
+        }
+    }
+}

@@ -1,0 +1,43 @@
+# Full name:    FilamentTreeTracing_Monolithic_SWC_Internal_EndUser
+# Abbreviation: TreTrc_Mono_SWC_Int_EU
+
+name: "tretrc_mono_swc_int_eu"
+description: |
+  Estimate medial axis of connected filament tree networks
+  Storage: monolithic | User profile: enduser
+keywords:
+  - bioimage
+  - tretrc
+  - monolithic
+  - swc
+tools:
+  - "tretrc":
+      description: "Estimate medial axis of connected filament tree networks"
+      homepage: "https://github.com/example/tretrc"
+      documentation: "https://github.com/example/tretrc/docs"
+      licence: ["MIT"]
+input:
+  - meta:
+      type: map
+      description: |
+        Groovy map containing sample metadata.
+        e.g. [id: 'sample1', pixel_size_xy: 0.65, pixel_size_z: 2.0]
+  - image:
+      type: file
+      description: Input image file
+      pattern: "*.{tif,tiff,png}"
+output:
+  - meta:
+      type: map
+      description: Groovy map containing sample metadata
+topics:
+  versions:
+    - - "${task.process}":
+          type: string
+          description: The name of the process
+      - "tretrc":
+          type: string
+          description: The name of the tool
+      - "fiji --headless --eval 'println(System.getProperty("fiji.version"))' 2>&1 | tail -1":
+          type: eval
+          description: The command used to obtain the version of the tool

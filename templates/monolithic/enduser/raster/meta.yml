@@ -1,0 +1,43 @@
+# Full name:    Rasterisation_Monolithic_LabelMask_External_EndUser
+# Abbreviation: Raster_Mono_Msk_Ext_EU
+
+name: "raster_mono_msk_ext_eu"
+description: |
+  Convert vector annotations to raster label masks
+  Storage: monolithic | User profile: enduser
+keywords:
+  - bioimage
+  - raster
+  - monolithic
+  - mask
+tools:
+  - "raster":
+      description: "Convert vector annotations to raster label masks"
+      homepage: "https://github.com/example/raster"
+      documentation: "https://github.com/example/raster/docs"
+      licence: ["MIT"]
+input:
+  - meta:
+      type: map
+      description: |
+        Groovy map containing sample metadata.
+        e.g. [id: 'sample1', pixel_size_xy: 0.65, pixel_size_z: 2.0]
+  - geojson:
+      type: file
+      description: Vector annotation file
+      pattern: "*.{geojson,wkt}"
+output:
+  - meta:
+      type: map
+      description: Groovy map containing sample metadata
+topics:
+  versions:
+    - - "${task.process}":
+          type: string
+          description: The name of the process
+      - "raster":
+          type: string
+          description: The name of the tool
+      - "python -m raster --version 2>&1 | sed 's/.*//g'":
+          type: eval
+          description: The command used to obtain the version of the tool

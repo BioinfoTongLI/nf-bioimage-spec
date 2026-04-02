@@ -1,0 +1,43 @@
+# Full name:    SegmentationToVector_Monolithic_Vector_External_Developer
+# Abbreviation: Seg2Vec_Mono_Vec_Ext_Dev
+
+name: "seg2vec_mono_vec_ext_dev"
+description: |
+  Convert segmentation masks to vector format
+  Storage: monolithic | User profile: developer
+keywords:
+  - bioimage
+  - seg2vec
+  - monolithic
+  - vector
+tools:
+  - "seg2vec":
+      description: "Convert segmentation masks to vector format"
+      homepage: "https://github.com/example/seg2vec"
+      documentation: "https://github.com/example/seg2vec/docs"
+      licence: ["MIT"]
+input:
+  - meta:
+      type: map
+      description: |
+        Groovy map containing sample metadata.
+        e.g. [id: 'sample1', pixel_size_xy: 0.65, pixel_size_z: 2.0]
+  - image:
+      type: file
+      description: Input image file
+      pattern: "*.{tif,tiff,png}"
+output:
+  - meta:
+      type: map
+      description: Groovy map containing sample metadata
+topics:
+  versions:
+    - - "${task.process}":
+          type: string
+          description: The name of the process
+      - "seg2vec":
+          type: string
+          description: The name of the tool
+      - "python -m seg2vec --version 2>&1 | sed 's/.*//g'":
+          type: eval
+          description: The command used to obtain the version of the tool

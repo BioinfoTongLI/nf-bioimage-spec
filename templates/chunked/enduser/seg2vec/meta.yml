@@ -1,0 +1,43 @@
+# Full name:    SegmentationToVector_Chunked_Vector_Internal_EndUser
+# Abbreviation: Seg2Vec_Chnk_Vec_Int_EU
+
+name: "seg2vec_chnk_vec_int_eu"
+description: |
+  Convert segmentation masks to vector format
+  Storage: chunked | User profile: enduser
+keywords:
+  - bioimage
+  - seg2vec
+  - chunked
+  - vector
+tools:
+  - "seg2vec":
+      description: "Convert segmentation masks to vector format"
+      homepage: "https://github.com/example/seg2vec"
+      documentation: "https://github.com/example/seg2vec/docs"
+      licence: ["MIT"]
+input:
+  - meta:
+      type: map
+      description: |
+        Groovy map containing sample metadata.
+        e.g. [id: 'sample1', pixel_size_xy: 0.65, pixel_size_z: 2.0]
+  - zarr_dir:
+      type: directory
+      description: Path to OME-Zarr directory
+      pattern: "*.zarr"
+output:
+  - meta:
+      type: map
+      description: Groovy map containing sample metadata
+topics:
+  versions:
+    - - "${task.process}":
+          type: string
+          description: The name of the process
+      - "seg2vec":
+          type: string
+          description: The name of the tool
+      - "python -m seg2vec --version 2>&1 | sed 's/.*//g'":
+          type: eval
+          description: The command used to obtain the version of the tool

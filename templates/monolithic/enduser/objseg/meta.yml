@@ -1,0 +1,43 @@
+# Full name:    ObjectSegmentation_Monolithic_Vector_External_EndUser
+# Abbreviation: ObjSeg_Mono_Vec_Ext_EU
+
+name: "objseg_mono_vec_ext_eu"
+description: |
+  Delineate individual objects as distinct labelled regions
+  Storage: monolithic | User profile: enduser
+keywords:
+  - bioimage
+  - objseg
+  - monolithic
+  - vector
+tools:
+  - "objseg":
+      description: "Delineate individual objects as distinct labelled regions"
+      homepage: "https://github.com/example/objseg"
+      documentation: "https://github.com/example/objseg/docs"
+      licence: ["MIT"]
+input:
+  - meta:
+      type: map
+      description: |
+        Groovy map containing sample metadata.
+        e.g. [id: 'sample1', pixel_size_xy: 0.65, pixel_size_z: 2.0]
+  - image:
+      type: file
+      description: Input image file
+      pattern: "*.{tif,tiff,png}"
+output:
+  - meta:
+      type: map
+      description: Groovy map containing sample metadata
+topics:
+  versions:
+    - - "${task.process}":
+          type: string
+          description: The name of the process
+      - "objseg":
+          type: string
+          description: The name of the tool
+      - "python -m objseg --version 2>&1 | sed 's/.*//g'":
+          type: eval
+          description: The command used to obtain the version of the tool

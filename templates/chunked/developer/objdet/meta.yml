@@ -1,0 +1,47 @@
+# Full name:    SpotObjectDetection_Chunked_Tabular_Internal_Developer
+# Abbreviation: ObjDet_Chnk_Tab_Int_Dev
+
+name: "objdet_chnk_tab_int_dev"
+description: |
+  Detect and localise objects (e.g. nuclei, spots)
+  Storage: chunked | User profile: developer
+keywords:
+  - bioimage
+  - objdet
+  - chunked
+  - tabular
+tools:
+  - "objdet":
+      description: "Detect and localise objects (e.g. nuclei, spots)"
+      homepage: "https://github.com/example/objdet"
+      documentation: "https://github.com/example/objdet/docs"
+      licence: ["MIT"]
+input:
+  - meta:
+      type: map
+      description: |
+        Groovy map containing sample metadata.
+        e.g. [id: 'sample1', pixel_size_xy: 0.65, pixel_size_z: 2.0]
+  - zarr_dir:
+      type: directory
+      description: Path to OME-Zarr directory
+      pattern: "*.zarr"
+  - model_weights:
+      type: file
+      description: Path to model weights file
+      pattern: "*.{pth,h5,onnx,pt}"
+output:
+  - meta:
+      type: map
+      description: Groovy map containing sample metadata
+topics:
+  versions:
+    - - "${task.process}":
+          type: string
+          description: The name of the process
+      - "objdet":
+          type: string
+          description: The name of the tool
+      - "python -m objdet --version 2>&1 | sed 's/.*//g'":
+          type: eval
+          description: The command used to obtain the version of the tool

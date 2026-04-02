@@ -1,0 +1,28 @@
+// Full name:    FeatureExtraction_Monolithic_Tabular_External_Developer
+// Abbreviation: FeatExt_Mono_Tab_Ext_Dev
+
+nextflow_process {
+    name "Test FEATEXT_MONO_TAB_EXT_DEV"
+    script "../main.nf"
+    process "FEATEXT_MONO_TAB_EXT_DEV"
+
+    test("Should run FeatExt monolithic developer") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [id: 'test', pixel_size_xy: 0.65],
+                    file(params.test_data['image'], checkIfExists: true)
+                ]
+                """
+            }
+        }
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() },
+                { assert process.out.findAll { key, val -> key.startsWith('versions') } }
+            )
+        }
+    }
+}

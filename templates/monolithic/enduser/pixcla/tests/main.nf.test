@@ -1,0 +1,28 @@
+// Full name:    PixelVoxelClassification_Monolithic_LabelMask_External_EndUser
+// Abbreviation: PixCla_Mono_Msk_Ext_EU
+
+nextflow_process {
+    name "Test PIXCLA_MONO_MSK_EXT_EU"
+    script "../main.nf"
+    process "PIXCLA_MONO_MSK_EXT_EU"
+
+    test("Should run PixCla monolithic enduser") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [id: 'test', pixel_size_xy: 0.65],
+                    file(params.test_data['image'], checkIfExists: true)
+                ]
+                """
+            }
+        }
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() },
+                { assert process.out.findAll { key, val -> key.startsWith('versions') } }
+            )
+        }
+    }
+}

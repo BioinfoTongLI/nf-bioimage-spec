@@ -1,0 +1,67 @@
+{
+  "storage": {
+    "monolithic": { "full": "Monolithic", "abbr": "Mono", "description": "Single-file formats (TIFF, PNG, HDF5). Module receives/emits file paths." },
+    "chunked":    { "full": "Chunked",    "abbr": "Chnk", "description": "OME-Zarr/N5. Module receives zarr directory. Always internal parallelism." }
+  },
+  "output": {
+    "image":     { "full": "Image",              "abbr": "Img" },
+    "mask":      { "full": "LabelMask",           "abbr": "Msk" },
+    "vector":    { "full": "Vector",              "abbr": "Vec" },
+    "tabular":   { "full": "Tabular",             "abbr": "Tab" },
+    "scalar":    { "full": "Scalar",              "abbr": "Scl" },
+    "skeleton":  { "full": "SkeletonMask",         "abbr": "Skl" },
+    "swc":       { "full": "SWC",                 "abbr": "SWC" },
+    "track":     { "full": "Tracks",              "abbr": "Trk" },
+    "track+div": { "full": "TracksWithDivision",   "abbr": "TrkDiv" },
+    "points":    { "full": "Points",              "abbr": "Pts" },
+    "classmask": { "full": "ClassMask",            "abbr": "ClsMsk" }
+  },
+  "parallelism": {
+    "external": { "full": "External", "abbr": "Ext", "description": "Nextflow scatters FOVs/tiles to separate processes." },
+    "internal": { "full": "Internal", "abbr": "Int", "description": "Module coordinates across data internally." }
+  },
+  "user_profile": {
+    "enduser":   { "full": "EndUser",   "abbr": "EU",  "description": "Bundled models, preset params, minimal config." },
+    "developer": { "full": "Developer", "abbr": "Dev", "description": "Custom models via input channel, all params exposed." }
+  },
+  "gpu": {
+    "none":     { "label": "CPU only" },
+    "optional": { "label": "GPU optional" },
+    "required": { "label": "GPU required" }
+  },
+  "model": {
+    "none":          { "label": "No model" },
+    "model_bundled": { "label": "Model bundled in container" },
+    "model_input":   { "label": "Model as input path channel" }
+  },
+  "ecosystem": {
+    "python":    { "label": "Python" },
+    "java_fiji": { "label": "Java / Fiji" },
+    "mixed":     { "label": "Mixed" }
+  },
+  "io_strategy": {
+    "new_file":                { "label": "New output file(s)", "idempotent": true },
+    "read_only_new_file":      { "label": "Read-only zarr, write new file", "idempotent": true },
+    "new_group_same_zarr":     { "label": "New array group in same zarr (e.g. /processed/)", "idempotent": true, "note": "NF stages zarr to task workdir" },
+    "new_zarr_symlink_labels": { "label": "New zarr dir with symlinks to input + new labels/ group", "idempotent": true },
+    "new_zarr_symlink_meta":   { "label": "New zarr dir with symlinks to input + rewritten metadata", "idempotent": true }
+  },
+  "dim_handling": {
+    "single_plane":      "Single 2D plane",
+    "per_channel_slice":  "Per channel/slice (C or Z independently)",
+    "full_volume":        "Full 3D volume (XYZ together)",
+    "full_stack":         "Full TCZYX stack",
+    "full_timelapse":     "Full time-lapse (T required)",
+    "multi_tile":         "Multi-tile / multi-FOV"
+  },
+  "naming_convention": {
+    "pattern_full":  "{CategoryFull}_{StorageFull}_{OutputFull}_{ParallelismFull}_{UserProfileFull}",
+    "pattern_abbr":  "{CategoryAbbr}_{StorageAbbr}_{OutputAbbr}_{ParallelismAbbr}_{UserProfileAbbr}",
+    "process_name":  "Abbreviation uppercased",
+    "module_path":   "modules/nf-core/{category_lower}/{storage}_{output}_{profile}/"
+  },
+  "rules": {
+    "chunked_implies_internal": true,
+    "nextflow_input_ne_output": true
+  }
+}

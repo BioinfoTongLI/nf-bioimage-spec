@@ -1,0 +1,43 @@
+# Full name:    ParticleTracking_Chunked_Tracks_Internal_EndUser
+# Abbreviation: PrtTrk_Chnk_Trk_Int_EU
+
+name: "prttrk_chnk_trk_int_eu"
+description: |
+  Estimate tracks followed by particles (no division)
+  Storage: chunked | User profile: enduser
+keywords:
+  - bioimage
+  - prttrk
+  - chunked
+  - track
+tools:
+  - "prttrk":
+      description: "Estimate tracks followed by particles (no division)"
+      homepage: "https://github.com/example/prttrk"
+      documentation: "https://github.com/example/prttrk/docs"
+      licence: ["MIT"]
+input:
+  - meta:
+      type: map
+      description: |
+        Groovy map containing sample metadata.
+        e.g. [id: 'sample1', pixel_size_xy: 0.65, pixel_size_z: 2.0]
+  - zarr_dir:
+      type: directory
+      description: Path to OME-Zarr directory
+      pattern: "*.zarr"
+output:
+  - meta:
+      type: map
+      description: Groovy map containing sample metadata
+topics:
+  versions:
+    - - "${task.process}":
+          type: string
+          description: The name of the process
+      - "prttrk":
+          type: string
+          description: The name of the tool
+      - "python -m prttrk --version 2>&1 | sed 's/.*//g'":
+          type: eval
+          description: The command used to obtain the version of the tool

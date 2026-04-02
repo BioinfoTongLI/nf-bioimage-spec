@@ -1,0 +1,47 @@
+# Full name:    ImageProcessing_Chunked_Image_Internal_Developer
+# Abbreviation: ImgProc_Chnk_Img_Int_Dev
+
+name: "imgproc_chnk_img_int_dev"
+description: |
+  Denoising, deconvolution, flat-field correction, filtering
+  Storage: chunked | User profile: developer
+keywords:
+  - bioimage
+  - imgproc
+  - chunked
+  - image
+tools:
+  - "imgproc":
+      description: "Denoising, deconvolution, flat-field correction, filtering"
+      homepage: "https://github.com/example/imgproc"
+      documentation: "https://github.com/example/imgproc/docs"
+      licence: ["MIT"]
+input:
+  - meta:
+      type: map
+      description: |
+        Groovy map containing sample metadata.
+        e.g. [id: 'sample1', pixel_size_xy: 0.65, pixel_size_z: 2.0]
+  - zarr_dir:
+      type: directory
+      description: Path to OME-Zarr directory
+      pattern: "*.zarr"
+  - model_weights:
+      type: file
+      description: Path to model weights file
+      pattern: "*.{pth,h5,onnx,pt}"
+output:
+  - meta:
+      type: map
+      description: Groovy map containing sample metadata
+topics:
+  versions:
+    - - "${task.process}":
+          type: string
+          description: The name of the process
+      - "imgproc":
+          type: string
+          description: The name of the tool
+      - "python -m imgproc --version 2>&1 | sed 's/.*//g'":
+          type: eval
+          description: The command used to obtain the version of the tool

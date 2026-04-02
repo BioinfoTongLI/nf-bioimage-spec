@@ -1,0 +1,43 @@
+# Full name:    FeatureExtraction_Monolithic_Tabular_External_EndUser
+# Abbreviation: FeatExt_Mono_Tab_Ext_EU
+
+name: "featext_mono_tab_ext_eu"
+description: |
+  Measure morphological, intensity, or texture features
+  Storage: monolithic | User profile: enduser
+keywords:
+  - bioimage
+  - featext
+  - monolithic
+  - tabular
+tools:
+  - "featext":
+      description: "Measure morphological, intensity, or texture features"
+      homepage: "https://github.com/example/featext"
+      documentation: "https://github.com/example/featext/docs"
+      licence: ["MIT"]
+input:
+  - meta:
+      type: map
+      description: |
+        Groovy map containing sample metadata.
+        e.g. [id: 'sample1', pixel_size_xy: 0.65, pixel_size_z: 2.0]
+  - image:
+      type: file
+      description: Input image file
+      pattern: "*.{tif,tiff,png}"
+output:
+  - meta:
+      type: map
+      description: Groovy map containing sample metadata
+topics:
+  versions:
+    - - "${task.process}":
+          type: string
+          description: The name of the process
+      - "featext":
+          type: string
+          description: The name of the tool
+      - "python -m featext --version 2>&1 | sed 's/.*//g'":
+          type: eval
+          description: The command used to obtain the version of the tool

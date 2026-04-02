@@ -1,0 +1,47 @@
+# Full name:    ObjectTracking_Chunked_TracksWithDivision_Internal_Developer
+# Abbreviation: ObjTrk_Chnk_TrkDiv_Int_Dev
+
+name: "objtrk_chnk_trkdiv_int_dev"
+description: |
+  Estimate tracks + segmentation masks (with divisions)
+  Storage: chunked | User profile: developer
+keywords:
+  - bioimage
+  - objtrk
+  - chunked
+  - track+div
+tools:
+  - "objtrk":
+      description: "Estimate tracks + segmentation masks (with divisions)"
+      homepage: "https://github.com/example/objtrk"
+      documentation: "https://github.com/example/objtrk/docs"
+      licence: ["MIT"]
+input:
+  - meta:
+      type: map
+      description: |
+        Groovy map containing sample metadata.
+        e.g. [id: 'sample1', pixel_size_xy: 0.65, pixel_size_z: 2.0]
+  - zarr_dir:
+      type: directory
+      description: Path to OME-Zarr directory
+      pattern: "*.zarr"
+  - model_weights:
+      type: file
+      description: Path to model weights file
+      pattern: "*.{pth,h5,onnx,pt}"
+output:
+  - meta:
+      type: map
+      description: Groovy map containing sample metadata
+topics:
+  versions:
+    - - "${task.process}":
+          type: string
+          description: The name of the process
+      - "objtrk":
+          type: string
+          description: The name of the tool
+      - "python -m objtrk --version 2>&1 | sed 's/.*//g'":
+          type: eval
+          description: The command used to obtain the version of the tool

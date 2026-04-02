@@ -1,0 +1,43 @@
+# Full name:    SpotObjectCounting_Monolithic_Scalar_External_EndUser
+# Abbreviation: SptCnt_Mono_Scl_Ext_EU
+
+name: "sptcnt_mono_scl_ext_eu"
+description: |
+  Estimate the number of objects
+  Storage: monolithic | User profile: enduser
+keywords:
+  - bioimage
+  - sptcnt
+  - monolithic
+  - scalar
+tools:
+  - "sptcnt":
+      description: "Estimate the number of objects"
+      homepage: "https://github.com/example/sptcnt"
+      documentation: "https://github.com/example/sptcnt/docs"
+      licence: ["MIT"]
+input:
+  - meta:
+      type: map
+      description: |
+        Groovy map containing sample metadata.
+        e.g. [id: 'sample1', pixel_size_xy: 0.65, pixel_size_z: 2.0]
+  - image:
+      type: file
+      description: Input image file
+      pattern: "*.{tif,tiff,png}"
+output:
+  - meta:
+      type: map
+      description: Groovy map containing sample metadata
+topics:
+  versions:
+    - - "${task.process}":
+          type: string
+          description: The name of the process
+      - "sptcnt":
+          type: string
+          description: The name of the tool
+      - "python -m sptcnt --version 2>&1 | sed 's/.*//g'":
+          type: eval
+          description: The command used to obtain the version of the tool
